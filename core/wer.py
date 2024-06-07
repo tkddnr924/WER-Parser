@@ -2,7 +2,6 @@ from typing import Dict, List
 from .utils import date_from_webkit
 from .constant import WER_REPORT_TYPE, WER_CONSENT
 
-import pdb
 
 class WER:
     directory_name = ""
@@ -68,8 +67,6 @@ class WER:
 
         _signature = WerSignature(report['Sig'])
         self.signature = _signature
-
-        print(f"\n[{self.event_type}] {self.program_name} {_signature.__dict__} \n")
 
         self.dynamic_signature = report['DynamicSig']
         self.ui = report['UI']

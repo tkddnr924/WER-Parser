@@ -3,7 +3,7 @@ from pathlib import Path
 import re
 
 from .wer import WER
-from .utils import get_report_file, sort_event_time
+from .utils import get_report_file, sort_event_time, sort_program_name
 
 from rich import console, table
 from tqdm import tqdm
@@ -25,12 +25,12 @@ class Parser:
     
     def view_data(self):
         _table = table.Table(title="WER(Windows Error Reporting)")
-        columns = ["Event Time", "Program Name", "Event Type", "error module", "exception code"]
+        columns = ["Event Time", "Program Name", "Event Type", "hash1", "hash2", 'report id']
 
         for column in columns:
             _table.add_column(column)
 
-        self.parsed_data.sort(key=sort_event_time, reverse=True)
+        self.parsed_data.sort(key=sort_program_name, reverse=True)
 
         # "\n".join([f"{item['Name']}: {item['Value']}" for item in wer.signature])
 
@@ -39,8 +39,9 @@ class Parser:
                 wer.event_time_readable,
                 wer.original_file_name,
                 wer.event_type,
-                wer.signature.error_module_name,
-                wer.signature.exception_code,
+                wer.first_hash,
+                wer.second_hash,
+                wer.report_id,
                 style='bright_green')
 
         self._console.print(_table)

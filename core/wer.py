@@ -1,7 +1,7 @@
-from typing import Dict, List
-from .utils import date_from_webkit, test_to_file
+from typing import Dict
+from .utils import date_from_webkit
 from .constant import WER_REPORT_TYPE, WER_CONSENT
-from pydantic import BaseModel, Field, AliasChoices
+from pydantic import BaseModel, Field
 
 DEFAULT_STRING = "-"
 
@@ -132,37 +132,3 @@ class WerSignature(BaseModel):
     os_revision: str= Field(default=DEFAULT_STRING)
     device_class: str= Field(default=DEFAULT_STRING)
     product_hash: str= Field(default=DEFAULT_STRING)
-
-    # def __init__(self, signature: List):
-    #     name_to_attr = {
-    #         "응용 프로그램 이름": "application_name",
-    #         "Application Name": "application_name",
-    #         "응용 프로그램 버전": "application_version",
-    #         "Application Version": "application_version",
-    #         "응용 프로그램 타임스탬프": "application_timestamp",
-    #         "Application Timestamp": "application_timestamp",
-    #         "오류 모듈 이름": "error_module_name",
-    #         "오류 모듈 버전": "error_module_version",
-    #         "오류 모듈 타임스탬프": "error_module_timestamp",
-    #         "예외 코드": "exception_code",
-    #         "예외 오프셋": "exception_offset",
-    #         "예외 데이터": "exception_data",
-    #         "Hang Signature": "hang_signature",
-    #         "Hang Type": "hang_type",
-    #         "Package Full Name": "package_full_name",
-    #         "ClientAppId": "client_app_id",
-    #         "HResult": "h_result",
-    #         "OSVersion": "os_version",
-    #         "OSRevision": "os_revision",
-    #         "DeviceClass": "device_class",
-    #         "ProductHash": "product_hash"
-    #     }
-        
-    #     for item in signature:
-    #         attr_name = name_to_attr.get(item['Name'])
-    #         if attr_name:
-    #             setattr(self, attr_name, item['Value'])
-    
-    # def __str__(self):
-    #     return f"[{self.application_timestamp}] {self.application_name} {self.exception_code}"
-    

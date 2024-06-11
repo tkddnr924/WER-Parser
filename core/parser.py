@@ -3,7 +3,7 @@ from pathlib import Path
 import re
 
 from .wer import WER
-from .utils import get_report_file, sort_event_time, sort_program_name
+from .utils import get_report_file, sort_event_time
 
 from rich import console, table
 from tqdm import tqdm
@@ -30,7 +30,7 @@ class Parser:
         for column in columns:
             _table.add_column(column)
 
-        self.parsed_data.sort(key=sort_program_name, reverse=True)
+        self.parsed_data.sort(key=sort_event_time, reverse=True)
 
         # "\n".join([f"{item['Name']}: {item['Value']}" for item in wer.signature])
 

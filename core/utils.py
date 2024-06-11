@@ -22,4 +22,8 @@ def sort_event_time(obj):
     return obj.event_time_readable
 
 def sort_program_name(obj):
-    return obj.program_name
+    return obj.app_name
+
+def test_to_file(line):
+    with open("test.txt", "a") as _log:
+        _log.write(line + "\n\n")

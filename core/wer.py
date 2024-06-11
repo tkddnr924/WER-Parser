@@ -1,10 +1,12 @@
 from typing import Dict, List
-from .utils import date_from_webkit
+from .utils import date_from_webkit, test_to_file
 from .constant import WER_REPORT_TYPE, WER_CONSENT
+from pydantic import BaseModel, Field, AliasChoices
 
+DEFAULT_STRING = "-"
 
 class WER:
-    directory_name = ""
+    directory_name: str = ""
 
     def __init__(self, data: Dict):
         self._split_file_path(data['file_path'])
@@ -39,21 +41,22 @@ class WER:
         self.event_type = report['EventType']
         self.event_time = report['EventTime']
         self.event_time_readable = date_from_webkit(self.event_time)
-        self.report_type = WER_REPORT_TYPE[report['ReportType']] if "ReportType" in report else report['FriendlyEventName'] 
+        self.report_type = report.get("ReportType", DEFAULT_STRING)
+        self.report_type_decription = WER_REPORT_TYPE[report['ReportType']] if "ReportType" in report else DEFAULT_STRING
         self.consent = WER_CONSENT[report['Consent']]
         self.upload_time = report['UploadTime']
         self.upload_time_readable = date_from_webkit(self.upload_time)
-        self.report_flags = report.get("ReportFlags", "")
+        self.report_flags = report.get("ReportFlags", DEFAULT_STRING)
         self.report_status = report['ReportStatus']
         self.report_identifier = report['ReportIdentifier']
-        self.integrator_report_identifier = report.get("IntegratorReportIdentifier", "")
+        self.integrator_report_identifier = report.get("IntegratorReportIdentifier", DEFAULT_STRING)
         self.wow64_host = report['Wow64Host']
         self.app_session_guid = report['AppSessionGuid']
         self.boot_id = report['BootId']
         self.heap_dump_attached = report.get("HeapdumpAttached", "")
         self.target_as_id = report['TargetAsId']
-        self.target_app_id = report.get('TargetAppId', "-")
-        self.target_app_ver = report.get('TargetAppVer', '-')
+        self.target_app_id = report.get('TargetAppId', DEFAULT_STRING)
+        self.target_app_ver = report.get('TargetAppVer', DEFAULT_STRING)
         self.user_impact_vector = report.get("UserImpactVector", "")
         self.is_fatal = report.get('IsFatal', "")
         self.friendly_event_name = report['FriendlyEventName']
@@ -65,27 +68,18 @@ class WER:
         self.metadata_hash = report['MetadataHash']
         self.response = WerResponse(report['Response'])
 
-        _signature = WerSignature(report['Sig'])
-        self.signature = _signature
+        _signature: Dict = self._convert_signature(report['Sig'])
+        self.signature = WerSignature(**_signature)
 
         self.dynamic_signature = report['DynamicSig']
-        self.ui = report['UI']
-        self.loaded_module = report['LoadedModule']
-        self.state = report['State']
+        self.ui = report.get('UI', [])
+        self.loaded_module = report.get('LoadedModule', [])
+        self.state = report.get('State', [])
         self.os_info = report['OsInfo']
-        self.original_file_name = report.get("OriginalFilename", self.program_name)
+        self.original_file_name = report.get("OriginalFilename", DEFAULT_STRING)
 
-
-class WerResponse:
-    def __init__(self, response: Dict):
-        self.bucket_id = response.get('BucketId', "")
-        self.bucket_table = response.get('BucketTable', "")
-        self.legacy_bucket_id = response.get("LegacyBucketId", "")
-        self.type = response.get('type', "")
-
-class WerSignature:
-    def __init__(self, signature: List):
-        name_to_attr = {
+    def _convert_signature(self, signature) -> Dict:
+        field_mapping = {
             "응용 프로그램 이름": "application_name",
             "Application Name": "application_name",
             "응용 프로그램 버전": "application_version",
@@ -108,9 +102,67 @@ class WerSignature:
             "DeviceClass": "device_class",
             "ProductHash": "product_hash"
         }
+
+        return {field_mapping[item['Name']]: item['Value'] for item in signature}
+
+
+class WerResponse:
+    def __init__(self, response: Dict):
+        self.bucket_id = response.get('BucketId', "")
+        self.bucket_table = response.get('BucketTable', "")
+        self.legacy_bucket_id = response.get("LegacyBucketId", "")
+        self.type = response.get('type', "")
+
+class WerSignature(BaseModel):
+    application_name: str = Field(default=DEFAULT_STRING)
+    application_version: str = Field(default=DEFAULT_STRING)
+    application_timestamp: str = Field(default=DEFAULT_STRING)
+    error_module_name: str = Field(default=DEFAULT_STRING)
+    error_module_version: str= Field(default=DEFAULT_STRING)
+    error_module_timestamp: str= Field(default=DEFAULT_STRING)
+    exception_code: str= Field(default=DEFAULT_STRING)
+    exception_offset: str= Field(default=DEFAULT_STRING)
+    exception_data: str= Field(default=DEFAULT_STRING)
+    hang_signature: str= Field(default=DEFAULT_STRING)
+    hang_type: str= Field(default=DEFAULT_STRING)
+    package_full_name: str= Field(default=DEFAULT_STRING)
+    client_app_id: str= Field(default=DEFAULT_STRING)
+    h_result: str= Field(default=DEFAULT_STRING)
+    os_version: str= Field(default=DEFAULT_STRING)
+    os_revision: str= Field(default=DEFAULT_STRING)
+    device_class: str= Field(default=DEFAULT_STRING)
+    product_hash: str= Field(default=DEFAULT_STRING)
+
+    # def __init__(self, signature: List):
+    #     name_to_attr = {
+    #         "응용 프로그램 이름": "application_name",
+    #         "Application Name": "application_name",
+    #         "응용 프로그램 버전": "application_version",
+    #         "Application Version": "application_version",
+    #         "응용 프로그램 타임스탬프": "application_timestamp",
+    #         "Application Timestamp": "application_timestamp",
+    #         "오류 모듈 이름": "error_module_name",
+    #         "오류 모듈 버전": "error_module_version",
+    #         "오류 모듈 타임스탬프": "error_module_timestamp",
+    #         "예외 코드": "exception_code",
+    #         "예외 오프셋": "exception_offset",
+    #         "예외 데이터": "exception_data",
+    #         "Hang Signature": "hang_signature",
+    #         "Hang Type": "hang_type",
+    #         "Package Full Name": "package_full_name",
+    #         "ClientAppId": "client_app_id",
+    #         "HResult": "h_result",
+    #         "OSVersion": "os_version",
+    #         "OSRevision": "os_revision",
+    #         "DeviceClass": "device_class",
+    #         "ProductHash": "product_hash"
+    #     }
         
-        for item in signature:
-            attr_name = name_to_attr.get(item['Name'])
-            if attr_name:
-                setattr(self, attr_name, item['Value'])
+    #     for item in signature:
+    #         attr_name = name_to_attr.get(item['Name'])
+    #         if attr_name:
+    #             setattr(self, attr_name, item['Value'])
+    
+    # def __str__(self):
+    #     return f"[{self.application_timestamp}] {self.application_name} {self.exception_code}"
     

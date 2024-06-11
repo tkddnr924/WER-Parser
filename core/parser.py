@@ -25,7 +25,7 @@ class Parser:
     
     def view_data(self):
         _table = table.Table(title="WER(Windows Error Reporting)")
-        columns = ["Event Time", "Program Name", "Event Type", "hash1", "hash2", 'report id']
+        columns = ["Event Time", "Program Name", "Event Type", "Signature"]
 
         for column in columns:
             _table.add_column(column)
@@ -37,11 +37,9 @@ class Parser:
         for wer in self.parsed_data:
             _table.add_row(
                 wer.event_time_readable,
-                wer.original_file_name,
+                wer.app_name,
                 wer.event_type,
-                wer.first_hash,
-                wer.second_hash,
-                wer.report_id,
+                wer.signature.error_module_name,
                 style='bright_green')
 
         self._console.print(_table)
@@ -81,11 +79,21 @@ class Parser:
 
             wer_report = WER({ "file_path": report, "data": result })
             self.parsed_data.append(wer_report)
+            self._clear_temp()
 
 
     def _parse_wer(self, line: str) -> Tuple:
         key, value = line.split("=")
         return key, value
+    
+    def _clear_temp(self):
+        self.temp_response = []
+        self.temp_sig = []
+        self.temp_dynamic = []
+        self.temp_ui = []
+        self.temp_modules = []
+        self.temp_state = []
+        self.temp_os = []
     
     def _parse_temp(self) -> Dict:
         result = {}

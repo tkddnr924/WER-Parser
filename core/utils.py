@@ -27,3 +27,6 @@ def sort_program_name(obj):
 def test_to_file(line):
     with open("test.txt", "a") as _log:
         _log.write(line + "\n\n")
+
+def get_item_key(item):
+    return item['Name'] if 'Name' in item else item['Key']

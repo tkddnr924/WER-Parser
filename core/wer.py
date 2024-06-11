@@ -1,5 +1,5 @@
-from typing import Dict
-from .utils import date_from_webkit
+from typing import Dict, List
+from .utils import date_from_webkit, get_item_key
 from .constant import WER_REPORT_TYPE, WER_CONSENT
 from pydantic import BaseModel, Field
 
@@ -71,11 +71,11 @@ class WER:
         _signature: Dict = self._convert_signature(report['Sig'])
         self.signature = WerSignature(**_signature)
 
-        self.dynamic_signature = report['DynamicSig']
+        self.dynamic_signature = self._convert_list(report['DynamicSig'])
         self.ui = report.get('UI', [])
         self.loaded_module = report.get('LoadedModule', [])
-        self.state = report.get('State', [])
-        self.os_info = report['OsInfo']
+        self.state = self._convert_list(report.get('State', []))
+        self.os_info = self._convert_list(report['OsInfo'])
         self.original_file_name = report.get("OriginalFilename", DEFAULT_STRING)
 
     def _convert_signature(self, signature) -> Dict:
@@ -104,8 +104,12 @@ class WER:
         }
 
         return {field_mapping[item['Name']]: item['Value'] for item in signature}
+    
+    def _convert_list(self, data: List) -> Dict:
+        return {get_item_key(item): item['Value'] for item in data}
+    
 
-
+# Sub Class ###############################################################################
 class WerResponse:
     def __init__(self, response: Dict):
         self.bucket_id = response.get('BucketId', "")
